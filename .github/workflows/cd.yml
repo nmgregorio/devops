@@ -1,0 +1,65 @@
+name: Continuous Deployment
+
+on:
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    branches: [main]
+    types: [completed]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy-dev:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+    
+    - name: Configure kubectl
+      run: |
+        # Add your cluster config here
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+    
+    - name: Deploy to development
+      run: |
+        export IMAGE_TAG=sha-${{ github.sha }}
+        envsubst < k8s-manifests/overlays/dev/kustomization.yaml | kubectl apply -k -
+    
+    - name: Verify deployment
+      run: |
+        kubectl rollout status deployment/learning-hub-deployment -n dev
+        kubectl get services -n dev
+
+  deploy-staging:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: staging
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      run: |
+        # Similar deployment steps for staging
+        echo "Deploying to staging environment"
+
+  deploy-prod:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      run: |
+        # Production deployment with additional checks
+        echo "Deploying to production environment"

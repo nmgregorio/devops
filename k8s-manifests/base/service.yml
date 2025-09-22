@@ -8,7 +8,7 @@ spec:
   type: NodePort
   ports:
   - port: 80           # Service port
-    targetPort: 80     # Container port
+    targetPort: 8080     # Container port
     nodePort: 30080    # External port (optional - K8s will assign if omitted)
     protocol: TCP
   selector:
