@@ -4,11 +4,12 @@ kind: Kustomization
 resources:
 - deployment.yaml
 - service.yaml
-
-commonLabels:
-  app: learning-hub
-  version: v1
+- ingress.yaml
 
 images:
 - name: learning-hub
+  newName: nmgregorio/learning-hub  # Change this
   newTag: latest
+
+commonLabels:
+  app: learning-hub

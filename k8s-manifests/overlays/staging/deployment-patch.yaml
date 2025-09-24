@@ -2,23 +2,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: learning-hub-deployment
-  labels:
-    app: learning-hub
 spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: learning-hub
   template:
-    metadata:
-      labels:
-        app: learning-hub
     spec:
       containers:
       - name: learning-hub-container
-        image: nmgregorio/learning-hub:latest
-        ports:
-        - containerPort: 8080
+        env:
+        - name: ENVIRONMENT
+          value: "staging"
         resources:
           requests:
             memory: "64Mi"

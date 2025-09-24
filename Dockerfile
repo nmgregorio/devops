@@ -22,8 +22,14 @@ RUN apk update && apk upgrade && \
 # Copy built application from build stage
 COPY --from=build /app/src/index.html /usr/share/nginx/html/
 
+# Create directories and set permissions for non-root user
+RUN mkdir -p /tmp/nginx /var/cache/nginx && \
+    chown -R appuser:appuser /usr/share/nginx/html /var/cache/nginx /tmp/nginx && \
+    chmod -R 755 /usr/share/nginx/html
+
 # Copy custom nginx config for non-root operation
 COPY <<EOF /etc/nginx/nginx.conf
+pid /tmp/nginx/nginx.pid;
 events {
     worker_connections 1024;
 }
@@ -32,6 +38,11 @@ http {
     default_type  application/octet-stream;
     sendfile on;
     keepalive_timeout 65;
+    client_body_temp_path /tmp/nginx/client_temp;
+    proxy_temp_path       /tmp/nginx/proxy_temp_path;
+    fastcgi_temp_path     /tmp/nginx/fastcgi_temp;
+    uwsgi_temp_path       /tmp/nginx/uwsgi_temp;
+    scgi_temp_path        /tmp/nginx/scgi_temp;
     server {
         listen 8080;
         server_name localhost;
@@ -48,10 +59,6 @@ http {
     }
 }
 EOF
-
-# Set ownership and permissions
-RUN chown -R appuser:appuser /usr/share/nginx/html /var/cache/nginx /var/run && \
-    chmod -R 755 /usr/share/nginx/html
 
 # Switch to non-root user
 USER appuser
