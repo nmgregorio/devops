@@ -34,3 +34,6 @@ logs/
 # Temporary files
 tmp/
 temp/
+github-actions-kubeconfig.yaml
+*.kubeconfig
+*kubeconfig*
